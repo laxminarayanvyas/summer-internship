@@ -1,5 +1,6 @@
 package com.fintech.services;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
@@ -15,12 +16,22 @@ import com.fintech.dao.OutputFileDAO;
 @Service
 public class FileServiceImpl implements FileService {
 
+	
+	
+	
 	@Autowired
 	private FileDAO fileDao;
 	
 	@Autowired
 	private OutputFileDAO outputDao; //for all output type files
 	
+	public ByteArrayInputStream load(LocalDate to_date, LocalDate from_date, String size_type, Object guide,
+			int is_test) {
+	    List<OutputFile> listOfFile = outputDao.fetchOPFile(to_date,from_date,size_type, guide, is_test);
+
+	    ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listOfFile);
+	    return in;
+	  }
 	
 	@Override
 	public List<DailyClientProcessingFile> getDailyClientFile(String event_type, int is_test) {
@@ -31,7 +42,14 @@ public class FileServiceImpl implements FileService {
 	public List<OutputFile> getDailyOPFile(LocalDate to_date, LocalDate from_date, String size_type,
 			Object guide, int is_test) {
 		// TODO Auto-generated method stub
-		return outputDao.fetchDailyOPFile(to_date,from_date,size_type, guide, is_test);
+		return outputDao.fetchOPFile(to_date,from_date,size_type, guide, is_test);
+	}
+	@Override
+	public List<OutputFile> getMonthlyOPFile(LocalDate to_date, LocalDate from_date, String size_type, Object guide,
+			int is_test) {
+		// TODO Auto-generated method stub
+		
+		return outputDao.fetchOPFile(to_date,from_date,size_type, guide, is_test);
 	}
 	
 

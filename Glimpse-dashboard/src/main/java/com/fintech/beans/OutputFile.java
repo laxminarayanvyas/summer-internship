@@ -1,5 +1,6 @@
 package com.fintech.beans;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -17,7 +18,7 @@ public class OutputFile {
 	@Id
 	private String isin;
 	private String ticker;
-	private Date maturity;
+	private LocalDate maturity;
 	private Float spread;
 	private String currency; 
 	private Float price;
@@ -27,15 +28,15 @@ public class OutputFile {
 	@Column(name="SizeMM")
 	private Float size_in_MM_actual;
 	@Column(name="TradeDate")
-	private Date trade_date;
+	private LocalDate trade_date;
 	@Column(name="TradeTime")
-	private Date trade_time;
+	private LocalDate trade_time;
 	@Column(name="MidPrice")
 	private Float mid_price;
 	@Column(name="YieldPerc")
 	private Float yield_perc;
 	@Column(name="SettlementDate")
-	private Date settlement_date;
+	private LocalDate settlement_date;
 	@Column(name="Onvenue")
 	private String on_venue;
 	@Column(name="ProcessTrade")
@@ -51,9 +52,9 @@ public class OutputFile {
 	}
 
 
-	public OutputFile(Date trade_date, Date trade_time, Long dealers_in_competition, String side, String isin,
-			String ticker, Date maturity, Float coupon_perc, Float size_in_MM_actual, String currency, Float price,
-			Float mid_price, Float yield_perc, Float spread, Date settlement_date, String on_venue, String venue,
+	public OutputFile(LocalDate trade_date, LocalDate trade_time, Long dealers_in_competition, String side, String isin,
+			String ticker, LocalDate maturity, Float coupon_perc, Float size_in_MM_actual, String currency, Float price,
+			Float mid_price, Float yield_perc, Float spread, LocalDate settlement_date, String on_venue, String venue,
 			String process_trade, String auto_execution, String portfolio_trade) {
 		super();
 		this.side = side;
@@ -82,22 +83,22 @@ public class OutputFile {
 	
 
 
-	public Date getTrade_date() {
+	public LocalDate getTrade_date() {
 		return trade_date;
 	}
 
 
-	public void setTrade_date(Date trade_date) {
+	public void setTrade_date(LocalDate trade_date) {
 		this.trade_date = trade_date;
 	}
 
 
-	public Date getTrade_time() {
+	public LocalDate getTrade_time() {
 		return trade_time;
 	}
 
 
-	public void setTrade_time(Date trade_time) {
+	public void setTrade_time(LocalDate trade_time) {
 		this.trade_time = trade_time;
 	}
 
@@ -141,18 +142,18 @@ public class OutputFile {
 	}
 
 
-	public Date getMaturity() {
+	public LocalDate getMaturity() {
 		return maturity;
 	}
 
 
-	public void setMaturity(Date maturity) {
+	public void setMaturity(LocalDate maturity) {
 		this.maturity = maturity;
 	}
 
 
 	
-	  public double getCoupon_perc() { return coupon_perc; }
+	  public Float getCoupon_perc() { return coupon_perc; }
 	  
 	  
 	  public void setCoupon_perc(Float coupon_perc) { this.coupon_perc =
@@ -220,12 +221,12 @@ public class OutputFile {
 	}
 //
 
-	public Date getSettlement_date() {
+	public LocalDate getSettlement_date() {
 		return settlement_date;
 	}
 
 
-	public void setSettlement_date(Date settlement_date) {
+	public void setSettlement_date(LocalDate settlement_date) {
 		this.settlement_date = settlement_date;
 	}
 

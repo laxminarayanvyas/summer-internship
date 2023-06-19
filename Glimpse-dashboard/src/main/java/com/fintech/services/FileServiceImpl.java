@@ -8,8 +8,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fintech.beans.ConsolidatedOPFile;
 import com.fintech.beans.DailyClientProcessingFile;
 import com.fintech.beans.OutputFile;
+import com.fintech.dao.ConsolidatedDAO;
 import com.fintech.dao.FileDAO;
 import com.fintech.dao.OutputFileDAO;
 
@@ -25,11 +27,14 @@ public class FileServiceImpl implements FileService {
 	@Autowired
 	private OutputFileDAO outputDao; //for all output type files
 	
+	@Autowired
+	private ConsolidatedDAO cnDao;
+	
 	public ByteArrayInputStream load(LocalDate to_date, LocalDate from_date, String size_type, Object guide,
 			int is_test) {
 	    List<OutputFile> listOfFile = outputDao.fetchOPFile(to_date,from_date,size_type, guide, is_test);
 
-	    ByteArrayInputStream in = ExcelHelper.tutorialsToExcel(listOfFile);
+	    ByteArrayInputStream in = ExcelHelper.OPFileToCSV(listOfFile);
 	    return in;
 	  }
 	
@@ -50,6 +55,16 @@ public class FileServiceImpl implements FileService {
 		// TODO Auto-generated method stub
 		
 		return outputDao.fetchOPFile(to_date,from_date,size_type, guide, is_test);
+	}
+
+	
+	@Override
+	public List<ConsolidatedOPFile> getConsolidatedOP(Object object, Object object2) {
+		// TODO Auto-generated method stub
+		return cnDao.fetchConsolidatedOP(object,object2);
+
+	   // ByteArrayInputStream in = ExcelHelper.consolidatedOP(listOfFile);
+	   // return in;
 	}
 	
 

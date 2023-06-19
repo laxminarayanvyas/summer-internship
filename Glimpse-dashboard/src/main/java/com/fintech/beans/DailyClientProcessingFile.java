@@ -5,6 +5,8 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 
 
 @Entity
@@ -19,7 +21,9 @@ public class DailyClientProcessingFile {
 	private String event_type;
 	private String status_details;
 	private int is_active;
+	@JsonFormat(pattern = "HH:mm:ss")
 	private Date entry_dt_time;
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	private Date updated_date;
 	private String filename;
 	private int is_test;

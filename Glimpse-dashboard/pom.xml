@@ -46,13 +46,20 @@
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 			<version>3.1.0</version>
 		</dependency>
-		
+
 		<!--To download data in excel format-->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>4.1.2</version>
 		</dependency>
+		<!--this is for csv filee0-->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>5.5.1</version>
+		</dependency>
+
 
 	</dependencies>
 

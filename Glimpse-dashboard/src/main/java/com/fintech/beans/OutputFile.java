@@ -1,16 +1,21 @@
 package com.fintech.beans;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 
 
 @Entity
 public class OutputFile {
+	
+	//private int output_file_dtl_id;
 	@Column(name="DealersInCompetition")
 	//@Nullable
 	private Long dealers_in_competition; //dealers_in_competition
@@ -28,9 +33,11 @@ public class OutputFile {
 	@Column(name="SizeMM")
 	private Float size_in_MM_actual;
 	@Column(name="TradeDate")
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate trade_date;
 	@Column(name="TradeTime")
-	private LocalDate trade_time;
+	@JsonFormat(pattern = "HH:mm:ss")
+	private LocalDateTime trade_time;
 	@Column(name="MidPrice")
 	private Float mid_price;
 	@Column(name="YieldPerc")
@@ -52,7 +59,7 @@ public class OutputFile {
 	}
 
 
-	public OutputFile(LocalDate trade_date, LocalDate trade_time, Long dealers_in_competition, String side, String isin,
+	public OutputFile(LocalDate trade_date, LocalDateTime trade_time, Long dealers_in_competition, String side, String isin,
 			String ticker, LocalDate maturity, Float coupon_perc, Float size_in_MM_actual, String currency, Float price,
 			Float mid_price, Float yield_perc, Float spread, LocalDate settlement_date, String on_venue, String venue,
 			String process_trade, String auto_execution, String portfolio_trade) {
@@ -93,12 +100,12 @@ public class OutputFile {
 	}
 
 
-	public LocalDate getTrade_time() {
+	public LocalDateTime getTrade_time() {
 		return trade_time;
 	}
 
 
-	public void setTrade_time(LocalDate trade_time) {
+	public void setTrade_time(LocalDateTime trade_time) {
 		this.trade_time = trade_time;
 	}
 

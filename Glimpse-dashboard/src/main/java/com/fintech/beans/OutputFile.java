@@ -23,6 +23,7 @@ public class OutputFile {
 	@Id
 	private String isin;
 	private String ticker;
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate maturity;
 	private Float spread;
 	private String currency; 
@@ -31,7 +32,7 @@ public class OutputFile {
 	@Column(name="CouponPerc")
 	private  Float coupon_perc;
 	@Column(name="SizeMM")
-	private Float size_in_MM_actual;
+	private String size_in_MM_actual;
 	@Column(name="TradeDate")
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate trade_date;
@@ -43,6 +44,7 @@ public class OutputFile {
 	@Column(name="YieldPerc")
 	private Float yield_perc;
 	@Column(name="SettlementDate")
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate settlement_date;
 	@Column(name="Onvenue")
 	private String on_venue;
@@ -60,7 +62,7 @@ public class OutputFile {
 
 
 	public OutputFile(LocalDate trade_date, LocalDateTime trade_time, Long dealers_in_competition, String side, String isin,
-			String ticker, LocalDate maturity, Float coupon_perc, Float size_in_MM_actual, String currency, Float price,
+			String ticker, LocalDate maturity, Float coupon_perc, String size_in_MM_actual, String currency, Float price,
 			Float mid_price, Float yield_perc, Float spread, LocalDate settlement_date, String on_venue, String venue,
 			String process_trade, String auto_execution, String portfolio_trade) {
 		super();
@@ -168,12 +170,12 @@ public class OutputFile {
 	 
 
 
-	public Float getSize_in_MM_actual() {
+	public String getSize_in_MM_actual() {
 		return size_in_MM_actual;
 	}
 
 
-	public void setSize_in_MM_actual(Float size_in_MM_actual) {
+	public void setSize_in_MM_actual(String size_in_MM_actual) {
 		this.size_in_MM_actual = size_in_MM_actual;
 	}
 

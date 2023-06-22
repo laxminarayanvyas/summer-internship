@@ -2,6 +2,7 @@ package com.fintech.beans;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -18,6 +19,7 @@ public class DailyClientProcessingFile {
 	private Date process_timestamp_local;
 	private String process_status;
 	private String is_notification_sent;
+	//@Column(name="EventType")
 	private String event_type;
 	private String status_details;
 	private int is_active;

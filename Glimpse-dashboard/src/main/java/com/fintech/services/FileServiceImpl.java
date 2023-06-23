@@ -1,12 +1,19 @@
 package com.fintech.services;
 
 import java.io.ByteArrayInputStream;
+import java.io.Writer;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Service;
 
 import com.fintech.beans.ConsolidatedOPFile;
@@ -27,6 +34,9 @@ public class FileServiceImpl implements FileService {
 
 	@Autowired
 	private ConsolidatedDAO cnDao;
+
+	
+	
 
 	public ByteArrayInputStream load(LocalDate from_date, LocalDate to_date, Object guide, String size_type,
 			int is_test) {

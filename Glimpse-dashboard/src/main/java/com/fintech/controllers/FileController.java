@@ -1,7 +1,10 @@
 package com.fintech.controllers;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -11,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,12 +33,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.fintech.beans.ConsolidatedOPFile;
 import com.fintech.beans.DailyClientProcessingFile;
 import com.fintech.beans.OutputFile;
 import com.fintech.services.ExcelHelper;
 import com.fintech.services.FileService;
+
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
 public class FileController {
@@ -123,8 +129,7 @@ public class FileController {
 		return new ResponseEntity<>(monthlyOPList, HttpStatus.OK);
 	}
 
-	
-	//controller to download consolidated output file
+	// controller to download consolidated output file
 	@GetMapping("/downloadcons")
 	public void downloadCSV(HttpServletResponse response, @RequestParam(name = "startDate") String startDate,
 			@RequestParam(name = "endDate") String endDate) throws IOException {
@@ -132,17 +137,43 @@ public class FileController {
 		response.setContentType("text/csv");
 		response.setHeader("Content-Disposition", "attachment; filename=\"ConsolidatedData.csv\"");
 
+		/*
+		 * List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(null,
+		 * null);
+		 * 
+		 * ExcelHelper.consolidatedOP(dataList, response.getWriter());
+		 */
+		
 		List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(null, null);
 
-		ExcelHelper.consolidatedOP(dataList, response.getWriter());
+	    Stream<String> csvData = ExcelHelper.consolidatedOP(dataList);
+	    
+	    try (PrintWriter writer = response.getWriter()) {
+	        csvData.forEach(writer::println);
+	    }
 	}
+
+	/*
+	 * public ResponseEntity<Resource> downloadSingleReport() { File dlFile = new
+	 * File("some_path"); if (!dlFile.exists()) { return
+	 * ResponseEntity.notFound().build(); }
+	 * 
+	 * try { try (InputStream stream = new FileInputStream(dlFile)) {
+	 * InputStreamResource streamResource = new InputStreamResource(stream); return
+	 * ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+	 * .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +
+	 * dlFile.getName() + "\"") .body(streamResource); }
+	 * 
+	 * } catch (IOException e) { return
+	 * ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); } }
+	 */
 
 	/* download daily output and monthly output file */
 	@GetMapping("/download")
 	public ResponseEntity<InputStreamResource> getFile(@RequestParam(name = "id") int id) {
 
 		LocalDate from_date, to_date;
-		if (id == 1) {									//To download daily op file data we taking date
+		if (id == 1) { // To download daily op file data we taking date
 			to_date = LocalDate.now();
 			from_date = to_date.minusDays(1);
 		} else {
@@ -172,7 +203,7 @@ public class FileController {
 		 */
 	}
 
-	//controller to know statistics of both Output files
+	// controller to know statistics of both Output files
 	@GetMapping("dailyopstat")
 	public ResponseEntity<DailyClientProcessingFile> getDailyOPStat(@RequestParam(name = "id") int id) {
 		LocalDate to_date = LocalDate.now(), from_date;
@@ -181,15 +212,14 @@ public class FileController {
 		DailyClientProcessingFile opStatList;
 
 		/*
-		 * Date we enter manually
-		 * LocalDateTime currentDateTime = LocalDateTime.now(); LocalDateTime
-		 * previousDateTime = currentDateTime.minusDays(2); LocalDateTime
+		 * Date we enter manually LocalDateTime currentDateTime = LocalDateTime.now();
+		 * LocalDateTime previousDateTime = currentDateTime.minusDays(2); LocalDateTime
 		 * previousMonthDateTime = currentDateTime.minusMonths(1);
 		 */
 
 		// Get the previous date and time
 
-		if (id == 1) {  // for daily op file
+		if (id == 1) { // for daily op file
 			from_date = to_date.minusDays(1);
 			from_dateTime = LocalDateTime.of(from_date, time);
 
@@ -199,7 +229,7 @@ public class FileController {
 				return null;
 			else
 				return new ResponseEntity<>(opStatList, HttpStatus.OK);
-		} else { 										//for monthly op file
+		} else { // for monthly op file
 
 			from_date = to_date.minusMonths(1);
 			from_dateTime = LocalDateTime.of(from_date, time);

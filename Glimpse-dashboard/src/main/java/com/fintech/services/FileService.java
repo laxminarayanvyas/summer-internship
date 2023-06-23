@@ -1,6 +1,7 @@
 package com.fintech.services;
 
 import java.io.ByteArrayInputStream;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -26,5 +27,7 @@ public interface FileService {
 
 	DailyClientProcessingFile getMonthlyOPStat(String string, int i, LocalDateTime from_dateTime,
 			LocalDateTime to_dateTime,int check);
+
+	
 
 }

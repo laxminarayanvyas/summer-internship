@@ -1,10 +1,13 @@
 package com.fintech.controllers;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -14,7 +17,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -94,6 +103,7 @@ public class FileController {
 		System.err.println("daily  client : " + from_dateTime + " " + to_dateTime);
 		List<DailyClientProcessingFile> dailyClientList = fileService.getDailyClientFile("pull", 0, from_dateTime,
 				to_dateTime);
+		System.out.println(dailyClientList);
 		// List<DailyClientProcessingFile> dailyClientList =
 		// fileService.getDailyClientFile("pull", 0, previousDateTime,currentDateTime);
 		// List<DailyClientProcessingFile> dailyClientList =
@@ -130,6 +140,7 @@ public class FileController {
 	}
 
 	// controller to download consolidated output file
+
 	@GetMapping("/downloadcons")
 	public void downloadCSV(HttpServletResponse response, @RequestParam(name = "startDate") String startDate,
 			@RequestParam(name = "endDate") String endDate) throws IOException {
@@ -137,21 +148,54 @@ public class FileController {
 		response.setContentType("text/csv");
 		response.setHeader("Content-Disposition", "attachment; filename=\"ConsolidatedData.csv\"");
 
-		/*
-		 * List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(null,
-		 * null);
-		 * 
-		 * ExcelHelper.consolidatedOP(dataList, response.getWriter());
-		 */
-		
-		List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(null, null);
+		List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(startDate, endDate);
 
-	    Stream<String> csvData = ExcelHelper.consolidatedOP(dataList);
-	    
-	    try (PrintWriter writer = response.getWriter()) {
-	        csvData.forEach(writer::println);
-	    }
+		// Create a Callable to generate the CSV data
+		Callable<Stream<String>> csvDataCallable = () -> ExcelHelper.consolidatedOP(dataList);
+
+		// Execute the CSV generation task asynchronously
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+		Future<Stream<String>> csvDataFuture = executorService.submit(csvDataCallable);
+
+		try (PrintWriter writer = response.getWriter()) {
+			// Retrieve the CSV data from the Future
+			try {
+				Stream<String> csvData = csvDataFuture.get();
+
+				// Write the CSV data to the response
+				csvData.forEach(writer::println);
+			} catch (InterruptedException | ExecutionException e) {
+				// Handle the exception
+				e.printStackTrace();
+			}
+		}
+
+		// Shutdown the executor service
+		executorService.shutdown();
 	}
+
+	/*
+	 * @GetMapping("/downloadcons") public void downloadCSV(HttpServletResponse
+	 * response, @RequestParam(name = "startDate") String startDate,
+	 * 
+	 * @RequestParam(name = "endDate") String endDate) throws IOException {
+	 * System.out.println(startDate + " " + endDate);
+	 * response.setContentType("text/csv");
+	 * response.setHeader("Content-Disposition",
+	 * "attachment; filename=\"ConsolidatedData.csv\"");
+	 * 
+	 * List<ConsolidatedOPFile> dataList =
+	 * fileService.getConsolidatedOP(startDate,endDate);
+	 * 
+	 * Stream<String> csvData = ExcelHelper.consolidatedOP(dataList);
+	 * 
+	 * 
+	 * try (PrintWriter writer = response.getWriter()) {
+	 * csvData.forEach(writer::println); }
+	 * 
+	 * 
+	 * }
+	 */
 
 	/*
 	 * public ResponseEntity<Resource> downloadSingleReport() { File dlFile = new
@@ -170,38 +214,76 @@ public class FileController {
 
 	/* download daily output and monthly output file */
 	@GetMapping("/download")
-	public ResponseEntity<InputStreamResource> getFile(@RequestParam(name = "id") int id) {
+	public void getFile(HttpServletResponse response, @RequestParam(name = "id") int id) throws IOException {
+	    response.setContentType("text/csv");
+	    response.setHeader("Content-Disposition", "attachment; filename=\"OPfile.csv\"");
 
-		LocalDate from_date, to_date;
-		if (id == 1) { // To download daily op file data we taking date
-			to_date = LocalDate.now();
-			from_date = to_date.minusDays(1);
-		} else {
-			to_date = LocalDate.now();
-			from_date = to_date.minusMonths(1);
-		}
-		System.out.println(from_date + " " + to_date + " " + id);
-		String filename = "GlimpseData" + from_date + to_date + ".csv";
-		ByteArrayInputStream inputStream = (fileService.load(from_date, to_date, null, "CAPPED", 0));
+	    LocalDate from_date, to_date;
+	    if (id == 1) { // To download daily op file data we take date
+	        to_date = LocalDate.now();
+	        from_date = to_date.minusDays(1);
+	    } else {
+	        to_date = LocalDate.now();
+	        from_date = to_date.minusMonths(1);
+	    }
+	    System.out.println(from_date + " " + to_date + " " + id);
+	    String filename = "GlimpseData" + from_date + to_date + ".csv";
+	    
+	    // Create a Callable to load the CSV data
+	    Callable<Stream<String>> csvDataCallable = () -> fileService.load(from_date, to_date, null, "CAPPED", 0);
 
-		if (inputStream == null) {
-			String message = "No file available for download.";
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.TEXT_PLAIN)
-					.body(new InputStreamResource(new ByteArrayInputStream(message.getBytes())));
-		}
+	    // Execute the CSV loading task asynchronously
+	    ExecutorService executorService = Executors.newSingleThreadExecutor();
+	    Future<Stream<String>> csvDataFuture = executorService.submit(csvDataCallable);
 
-		InputStreamResource file = new InputStreamResource(inputStream);
-		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-				.contentType(MediaType.parseMediaType("text/csv")).body(file);
+	    try (PrintWriter writer = response.getWriter()) {
+	        // Retrieve the CSV data from the Future
+	        try {
+	            Stream<String> csvData = csvDataFuture.get();
 
-		/*
-		 * This is first code i implemented to download file InputStreamResource file =
-		 * new InputStreamResource(fileService.load(from_date, to_date, null, "CAPPED",
-		 * 0)); return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-		 * "attachment; filename=" + filename)
-		 * .contentType(MediaType.parseMediaType("text/csv")).body(file);
-		 */
+	            // Write the CSV data to the response
+	            csvData.forEach(writer::println);
+	        } catch (InterruptedException | ExecutionException e) {
+	            // Handle the exception
+	            e.printStackTrace();
+	        }
+	    }
+
+	    // Shutdown the executor service
+	    executorService.shutdown();
 	}
+
+	/*
+	 * @GetMapping("/download") public void getFile(HttpServletResponse
+	 * response,@RequestParam(name = "id") int id)throws IOException {
+	 * response.setContentType("text/csv");
+	 * response.setHeader("Content-Disposition",
+	 * "attachment; filename=\"OPfile.csv\"");
+	 * 
+	 * LocalDate from_date, to_date; if (id == 1) { // To download daily op file
+	 * data we taking date to_date = LocalDate.now(); from_date =
+	 * to_date.minusDays(1); } else { to_date = LocalDate.now(); from_date =
+	 * to_date.minusMonths(1); } System.out.println(from_date + " " + to_date + " "
+	 * + id); String filename = "GlimpseData" + from_date + to_date + ".csv";
+	 * Stream<String> csvData = (fileService.load(from_date, to_date, null,
+	 * "CAPPED", 0));
+	 * 
+	 * 
+	 * if (inputStream == null) { String message =
+	 * "No file available for download."; return
+	 * ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.TEXT_PLAIN)
+	 * .body(new InputStreamResource(new ByteArrayInputStream(message.getBytes())));
+	 * }
+	 * 
+	 * 
+	 * 
+	 * 
+	 * try (PrintWriter writer = response.getWriter()) {
+	 * csvData.forEach(writer::println); }
+	 * 
+	 * 
+	 * }
+	 */
 
 	// controller to know statistics of both Output files
 	@GetMapping("dailyopstat")

@@ -11,58 +11,41 @@ import java.util.stream.Stream;
 
 public class ExcelHelper {
 
-	public static ByteArrayInputStream OPFileToCSV(List<OutputFile> files) {
+	public static Stream<String> OPFileToCSV(List<OutputFile> files) {
+	    String[] HEADERs = { "DATE", "TIME(UTC)", "NO. DEALERS", "SIDE", "ISIN", "TICKER", "MATURITY", "COUPON (%)",
+	            "SIZE", "CCY", "PRICE", "MID PRICE", "YIELD (%)", "SPREAD (%)", "SETTLEMENT", "ON VENUE", "VENUE",
+	            "PROCESS TRADE", "AUTOEX", "PORTFOLIO TRADE" };
 
-		String[] HEADERs = { "DATE", "TIME(UTC)", "NO. DEALERS", "SIDE", "ISIN", "TICKER", "MATURITY", "COUPON (%)",
-				"SIZE", "CCY", "PRICE", "MID PRICE", "YIELD (%)", "SPREAD (%)", "SETTLEMENT", "ON VENUE", "VENUE",
-				"PROCESS TRADE", "AUTOEX", "PORTFOLIO TRADE" };
+	    Stream<String> csvLines = files.stream().map(file -> {
+	        String[] rowData = {
+	                file.getTrade_date().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+	                file.getTrade_time().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+	                file.getDealers_in_competition() == null ? "" : file.getDealers_in_competition().toString(),
+	                file.getSide() == null ? "" : file.getSide(),
+	                file.getIsin() == null ? "" : file.getIsin(),
+	                file.getTicker() == null ? "" : file.getTicker(),
+	                file.getMaturity() == null ? "" : file.getMaturity().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+	                file.getCoupon_perc() == null ? "" : file.getCoupon_perc().toString(),
+	                file.getSize_in_MM_actual() == null ? "" : file.getSize_in_MM_actual().toString(),
+	                file.getCurrency() == null ? "" : file.getCurrency(),
+	                file.getPrice() == null ? "" : file.getPrice().toString(),
+	                file.getMid_price() == null ? "" : file.getMid_price().toString(),
+	                file.getYield_perc() == null ? "" : file.getYield_perc().toString(),
+	                file.getSpread() == null ? "" : file.getSpread().toString(),
+	                file.getSettlement_date().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+	                file.getOn_venue() == null ? "" : file.getOn_venue(),
+	                file.getVenue() == null ? "" : file.getVenue(),
+	                file.getProcess_trade() == null ? "" : file.getProcess_trade(),
+	                file.getAuto_execution() == null ? "" : file.getAuto_execution(),
+	                file.getPortfolio_trade() == null ? "" : file.getPortfolio_trade()
+	        };
+	        return String.join(",", rowData);
+	    });
 
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-				CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(out))) {
-
-			// Write CSV header
-			csvWriter.writeNext(HEADERs);
-
-			DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-			DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy"); // Change the date format as
-																							// per your requirement
-			DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-			String tradeDateStr;
-			// LocalDate tradeDate = file.getTrade_date();
-			for (OutputFile file : files) {
-				String[] rowData = {
-						(LocalDate.parse(file.getTrade_date().toString(), inputFormatter)).format(outputFormatter),
-						// String.format("%04d-%02d-%02d", file.getTrade_date().getYear(),
-						// file.getTrade_date().getMonthValue(), file.getTrade_date().getDayOfMonth()),
-						// file.getTrade_date().format(outputFormatter),
-						file.getTrade_time().format(timeFormatter),
-						file.getDealers_in_competition() == null ? "" : file.getDealers_in_competition().toString(),
-						file.getSide() == null ? "" : file.getSide(), file.getIsin() == null ? "" : file.getIsin(),
-						file.getTicker() == null ? "" : file.getTicker(), file.getMaturity().format(outputFormatter),
-						file.getCoupon_perc() == null ? "" : file.getCoupon_perc().toString(),
-						file.getSize_in_MM_actual() == null ? "" : file.getSize_in_MM_actual().toString(),
-						file.getCurrency() == null ? "" : file.getCurrency(),
-						file.getPrice() == null ? "" : file.getPrice().toString(),
-						file.getMid_price() == null ? "" : file.getMid_price().toString(),
-						file.getYield_perc() == null ? "" : file.getYield_perc().toString(),
-						file.getSpread() == null ? "" : file.getSpread().toString(),
-						file.getSettlement_date().format(outputFormatter),
-						file.getOn_venue() == null ? "" : file.getOn_venue(),
-						file.getVenue() == null ? "" : file.getVenue(),
-						file.getProcess_trade() == null ? "" : file.getProcess_trade(),
-						file.getAuto_execution() == null ? "" : file.getAuto_execution(),
-						file.getAuto_execution() == null ? "" : file.getAuto_execution() }; // Replace with your data
-
-				csvWriter.writeNext(rowData);
-			}
-
-			csvWriter.flush();
-
-			return new ByteArrayInputStream(out.toByteArray());
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to generate CSV file: " + e.getMessage());
-		}
+	    Stream<String> csvWithHeader = Stream.concat(Stream.of(String.join(",", HEADERs)), csvLines);
+	    return csvWithHeader;
 	}
+
 
 	// for consolidated file op
 

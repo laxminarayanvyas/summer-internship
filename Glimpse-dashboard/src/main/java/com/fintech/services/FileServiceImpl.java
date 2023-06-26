@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,16 +39,19 @@ public class FileServiceImpl implements FileService {
 	
 	
 
-	public ByteArrayInputStream load(LocalDate from_date, LocalDate to_date, Object guide, String size_type,
+	public Stream<String> load(LocalDate from_date, LocalDate to_date, Object guide, String size_type,
 			int is_test) {
 		List<OutputFile> listOfFile = outputDao.fetchOPFile(from_date, to_date, guide, size_type, is_test);
 
 		if (listOfFile.size() == 0)
 			return null;
 		else {
-			ByteArrayInputStream in = ExcelHelper.OPFileToCSV(listOfFile);
-			return in;
+			//ByteArrayInputStream in = ExcelHelper.OPFileToCSV(listOfFile);
+			Stream<String> csvData=ExcelHelper.OPFileToCSV(listOfFile);
+			return csvData;
+			//return in;
 		}
+		
 	}
 
 	@Override
@@ -66,9 +70,9 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
-	public List<ConsolidatedOPFile> getConsolidatedOP(Object object, Object object2) {
+	public List<ConsolidatedOPFile> getConsolidatedOP(String from_date, String to_date) {
 		// TODO Auto-generated method stub
-		return cnDao.fetchConsolidatedOP(object, object2);
+		return cnDao.fetchConsolidatedOP(from_date, to_date);
 
 		// ByteArrayInputStream in = ExcelHelper.consolidatedOP(listOfFile);
 		// return in;

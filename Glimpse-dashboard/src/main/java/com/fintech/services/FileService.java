@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.fintech.beans.ConsolidatedOPFile;
 import com.fintech.beans.DailyClientProcessingFile;
@@ -18,9 +19,9 @@ public interface FileService {
 
 	List<OutputFile> getMonthlyOPFile(LocalDate from_date, LocalDate to_date,  Object guide,String size_type, int is_test);
 	
-	public ByteArrayInputStream load(LocalDate from_date, LocalDate to_date, Object guide,String size_type, int is_test);
+	public Stream<String> load(LocalDate from_date, LocalDate to_date, Object guide,String size_type, int is_test);
 
-	List<ConsolidatedOPFile> getConsolidatedOP(Object object, Object object2);
+	List<ConsolidatedOPFile> getConsolidatedOP(String start_date, String end_date);
 
 	DailyClientProcessingFile getDailyOPStat(String string, int i, LocalDateTime from_dateTime,
 			LocalDateTime to_dateTime,int check);

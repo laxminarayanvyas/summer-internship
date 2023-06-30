@@ -103,7 +103,7 @@ public class FileController {
 		from_date = to_date.minusDays(1);
 		from_dateTime = LocalDateTime.of(from_date, time);
 
-		System.err.println("daily  client : " + from_dateTime + " " + to_dateTime);
+		System.err.println("hi it is daily  client : " + from_dateTime + " " + to_dateTime);
 		List<DailyClientProcessingFile> dailyClientList = fileService.getDailyClientFile("pull", 0, from_dateTime,
 				to_dateTime);
 		System.out.println(dailyClientList);

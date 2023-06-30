@@ -21,13 +21,10 @@ public interface FileService {
 	
 	public Stream<String> load(LocalDate from_date, LocalDate to_date, Object guide,String size_type, int is_test);
 
-	List<ConsolidatedOPFile> getConsolidatedOP(String start_date, String end_date);
+	List<ConsolidatedOPFile> getConsolidatedOP(String start_date, String end_date, String type);
 
-	DailyClientProcessingFile getDailyOPStat(String string, int i, LocalDateTime from_dateTime,
-			LocalDateTime to_dateTime,int check);
-
-	DailyClientProcessingFile getMonthlyOPStat(String string, int i, LocalDateTime from_dateTime,
-			LocalDateTime to_dateTime,int check);
+	public List<DailyClientProcessingFile> getDailyMonthlyOPFilesStat(String event_type, int test, LocalDateTime from_dateTime,
+			LocalDateTime to_dateTime);
 
 	
 

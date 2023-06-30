@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -36,8 +37,7 @@ public class ConsolidatedOPFile {
 	 
 	private Double coupon_perc;
 	 
-	private Double size_in_MM_actual;
-	 
+	@Column(name="SizeMM") 
 	private String size_in_MM;
 	 
 	private String currency;
@@ -133,7 +133,7 @@ public class ConsolidatedOPFile {
 	}
 	public ConsolidatedOPFile(Integer output_file_dtl_id, String process_guid, Integer clubbed_trades_count,
 			LocalDate trade_date, LocalDateTime trade_time, Integer dealers_in_competition, String side, String isin,
-			String ticker, LocalDate maturity, Double coupon_perc, Double size_in_MM_actual, String size_in_MM,
+			String ticker, LocalDate maturity, Double coupon_perc, String size_in_MM,
 			String currency, Double price_actual, Double price, Double mid_price_actual, Double mid_price,
 			Double yield_perc, Double spread, LocalDate settlement_date, String on_venue, String venue_actual,
 			String venue_mic, String venue_identifier, String process_trade, String auto_execution,
@@ -157,7 +157,6 @@ public class ConsolidatedOPFile {
 		this.ticker = ticker;
 		this.maturity = maturity;
 		this.coupon_perc = coupon_perc;
-		this.size_in_MM_actual = size_in_MM_actual;
 		this.size_in_MM = size_in_MM;
 		this.currency = currency;
 		this.price_actual = price_actual;
@@ -270,12 +269,7 @@ public class ConsolidatedOPFile {
 	public void setCoupon_perc(Double coupon_perc) {
 		this.coupon_perc = coupon_perc;
 	}
-	public Double getSize_in_MM_actual() {
-		return size_in_MM_actual;
-	}
-	public void setSize_in_MM_actual(Double size_in_MM_actual) {
-		this.size_in_MM_actual = size_in_MM_actual;
-	}
+	
 	public String getSize_in_MM() {
 		return size_in_MM;
 	}

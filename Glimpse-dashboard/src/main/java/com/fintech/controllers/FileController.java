@@ -51,7 +51,7 @@ import com.fintech.services.ExcelHelper;
 import com.fintech.services.FileService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = { "http://192.168.137.1:8081", "http://192.168.0.141:8081", "http://localhost:4200" })
 public class FileController {
 
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -68,7 +68,7 @@ public class FileController {
 
 	/* daily client processing file */
 	@GetMapping("/dailyclient")
-	public ResponseEntity<List<DailyClientProcessingFile>> dailyClientFile() {
+	public ResponseEntity<List<DailyClientProcessingFile>> dailyClientFile(@RequestParam(name = "searchDate") String date) {
 //		LocalDate from_date, to_date;
 //		to_date = LocalDate.now();
 //		from_date = to_date.minusDays(1);
@@ -94,7 +94,10 @@ public class FileController {
 		 * LocalDateTime previousDateTime = currentDateTime.minusDays(2);
 		 */
 
-		LocalDate to_date = LocalDate.now(), from_date;
+		String pattern = "yyyy-MM-dd";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+		LocalDate to_date = LocalDate.parse(date, formatter);
+		LocalDate from_date;
 		LocalTime time = LocalTime.now();
 		LocalDateTime to_dateTime = LocalDateTime.of(to_date, time), from_dateTime;
 		from_date = to_date.minusDays(1);
@@ -114,8 +117,11 @@ public class FileController {
 
 	/* when view button clicked for daily op file */
 	@GetMapping("/showdailyop")
-	public ResponseEntity<List<OutputFile>> dailyOPFile() {
-		LocalDate from_date, to_date;
+	public ResponseEntity<List<OutputFile>> dailyOPFile(@RequestParam(name = "searchDate") String date) {
+		String pattern = "yyyy-MM-dd";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+		LocalDate to_date = LocalDate.parse(date, formatter);
+		LocalDate from_date;
 		to_date = LocalDate.now();
 		from_date = to_date.minusDays(1);
 
@@ -127,8 +133,11 @@ public class FileController {
 
 	/* when view button clicked for monthly op file */
 	@GetMapping("/showmonthlyop")
-	public ResponseEntity<List<OutputFile>> monthlyOPFile() {
-		LocalDate from_date, to_date;
+	public ResponseEntity<List<OutputFile>> monthlyOPFile(@RequestParam(name = "searchDate") String date) {
+		String pattern = "yyyy-MM-dd";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+		LocalDate to_date = LocalDate.parse(date, formatter);
+		LocalDate from_date;
 
 		to_date = LocalDate.now();
 		from_date = to_date.minusMonths(1);
@@ -143,12 +152,17 @@ public class FileController {
 
 	@GetMapping("/downloadcons")
 	public void downloadCSV(HttpServletResponse response, @RequestParam(name = "startDate") String startDate,
-			@RequestParam(name = "endDate") String endDate) throws IOException {
+			@RequestParam(name = "endDate") String endDate, @RequestParam(name="type") Boolean type) throws IOException {
 		System.out.println(startDate + " " + endDate);
 		response.setContentType("text/csv");
 		response.setHeader("Content-Disposition", "attachment; filename=\"ConsolidatedData.csv\"");
 
-		List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(startDate, endDate);
+		//System.out.println(type.getClass().getName());
+		List<ConsolidatedOPFile> dataList;
+		if(type)
+			dataList = fileService.getConsolidatedOP(startDate, endDate,"CAPPED");
+		else
+			dataList = fileService.getConsolidatedOP(startDate, endDate,"UNCAPPED");
 
 		// Create a Callable to generate the CSV data
 		Callable<Stream<String>> csvDataCallable = () -> ExcelHelper.consolidatedOP(dataList);
@@ -173,6 +187,38 @@ public class FileController {
 		// Shutdown the executor service
 		executorService.shutdown();
 	}
+
+	/*
+	 * @GetMapping("/downloadcons") public void downloadCSV(HttpServletResponse
+	 * response, @RequestParam(name = "startDate") String startDate,
+	 * 
+	 * @RequestParam(name = "endDate") String endDate) throws IOException {
+	 * System.out.println(startDate + " " + endDate);
+	 * response.setContentType("application/zip");
+	 * response.setHeader("Content-Disposition",
+	 * "attachment; filename=\"ConsolidatedData.zip\"");
+	 * 
+	 * List<ConsolidatedOPFile> dataList = fileService.getConsolidatedOP(startDate,
+	 * endDate);
+	 * 
+	 * try (ZipOutputStream zipOut = new
+	 * ZipOutputStream(response.getOutputStream())) { // Create a Callable to
+	 * generate the CSV data Callable<byte[]> csvDataCallable = () ->
+	 * ExcelHelper.generateCSVData(dataList);
+	 * 
+	 * // Execute the CSV generation task asynchronously ExecutorService
+	 * executorService = Executors.newSingleThreadExecutor(); Future<byte[]>
+	 * csvDataFuture = executorService.submit(csvDataCallable);
+	 * 
+	 * try { // Retrieve the CSV data from the Future byte[] csvData =
+	 * csvDataFuture.get();
+	 * 
+	 * // Add the CSV file to the ZIP archive ZipEntry zipEntry = new
+	 * ZipEntry("ConsolidatedData.csv"); zipOut.putNextEntry(zipEntry);
+	 * zipOut.write(csvData); zipOut.closeEntry(); } catch (InterruptedException |
+	 * ExecutionException e) { // Handle the exception e.printStackTrace(); }
+	 * finally { // Shutdown the executor service executorService.shutdown(); } } }
+	 */
 
 	/*
 	 * @GetMapping("/downloadcons") public void downloadCSV(HttpServletResponse
@@ -214,43 +260,46 @@ public class FileController {
 
 	/* download daily output and monthly output file */
 	@GetMapping("/download")
-	public void getFile(HttpServletResponse response, @RequestParam(name = "id") int id) throws IOException {
-	    response.setContentType("text/csv");
-	    response.setHeader("Content-Disposition", "attachment; filename=\"OPfile.csv\"");
+	public void getFile(HttpServletResponse response, @RequestParam(name = "id") int id,
+			@RequestParam(name = "searchDate") String date) throws IOException {
+		response.setContentType("text/csv");
+		response.setHeader("Content-Disposition", "attachment; filename=\"OPfile.csv\"");
 
-	    LocalDate from_date, to_date;
-	    if (id == 1) { // To download daily op file data we take date
-	        to_date = LocalDate.now();
-	        from_date = to_date.minusDays(1);
-	    } else {
-	        to_date = LocalDate.now();
-	        from_date = to_date.minusMonths(1);
-	    }
-	    System.out.println(from_date + " " + to_date + " " + id);
-	    String filename = "GlimpseData" + from_date + to_date + ".csv";
-	    
-	    // Create a Callable to load the CSV data
-	    Callable<Stream<String>> csvDataCallable = () -> fileService.load(from_date, to_date, null, "CAPPED", 0);
+		
+		String pattern = "yyyy-MM-dd";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+		LocalDate to_date = LocalDate.parse(date, formatter);
+		LocalDate from_date;
+		if (id == 1) { // To download daily op file data we take date
+			from_date = to_date.minusDays(1);
+		} else {
+			from_date = to_date.minusMonths(1);
+		}
+		System.out.println(from_date + " " + to_date + " " + id);
+		String filename = "GlimpseData" + from_date + to_date + ".csv";
 
-	    // Execute the CSV loading task asynchronously
-	    ExecutorService executorService = Executors.newSingleThreadExecutor();
-	    Future<Stream<String>> csvDataFuture = executorService.submit(csvDataCallable);
+		// Create a Callable to load the CSV data
+		Callable<Stream<String>> csvDataCallable = () -> fileService.load(from_date, to_date, null, "CAPPED", 0);
 
-	    try (PrintWriter writer = response.getWriter()) {
-	        // Retrieve the CSV data from the Future
-	        try {
-	            Stream<String> csvData = csvDataFuture.get();
+		// Execute the CSV loading task asynchronously
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+		Future<Stream<String>> csvDataFuture = executorService.submit(csvDataCallable);
 
-	            // Write the CSV data to the response
-	            csvData.forEach(writer::println);
-	        } catch (InterruptedException | ExecutionException e) {
-	            // Handle the exception
-	            e.printStackTrace();
-	        }
-	    }
+		try (PrintWriter writer = response.getWriter()) {
+			// Retrieve the CSV data from the Future
+			try {
+				Stream<String> csvData = csvDataFuture.get();
 
-	    // Shutdown the executor service
-	    executorService.shutdown();
+				// Write the CSV data to the response
+				csvData.forEach(writer::println);
+			} catch (InterruptedException | ExecutionException e) {
+				// Handle the exception
+				e.printStackTrace();
+			}
+		}
+
+		// Shutdown the executor service
+		executorService.shutdown();
 	}
 
 	/*
@@ -286,39 +335,38 @@ public class FileController {
 	 */
 
 	// controller to know statistics of both Output files
-	@GetMapping("dailyopstat")
-	public ResponseEntity<DailyClientProcessingFile> getDailyOPStat(@RequestParam(name = "id") int id) {
-		LocalDate to_date = LocalDate.now(), from_date;
+	@GetMapping("opstat")
+	public ResponseEntity<List<DailyClientProcessingFile>> getDailyOPStat(
+			@RequestParam(name = "searchDate") String date) {
+		String pattern = "yyyy-MM-dd";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+		LocalDate to_date = LocalDate.parse(date, formatter);
+		LocalDate from_date;
 		LocalTime time = LocalTime.now();
 		LocalDateTime to_dateTime = LocalDateTime.of(to_date, time), from_dateTime;
-		DailyClientProcessingFile opStatList;
 
-		/*
-		 * Date we enter manually LocalDateTime currentDateTime = LocalDateTime.now();
-		 * LocalDateTime previousDateTime = currentDateTime.minusDays(2); LocalDateTime
-		 * previousMonthDateTime = currentDateTime.minusMonths(1);
-		 */
+		from_date = to_date.minusDays(1);
+		from_dateTime = LocalDateTime.of(from_date, time);
+		
+		System.out.println("opstat: "+from_dateTime+" "+to_dateTime);
 
-		// Get the previous date and time
+		return new ResponseEntity<>(fileService.getDailyMonthlyOPFilesStat("push", 0, from_dateTime, to_dateTime),
+				HttpStatus.OK);
+	}
 
-		if (id == 1) { // for daily op file
-			from_date = to_date.minusDays(1);
-			from_dateTime = LocalDateTime.of(from_date, time);
+	// file download from SFTP
+	@GetMapping("/downloadfile")
+	public void downloadFile(HttpServletResponse response) throws IOException {
+		// Set the SFTP and file details
+		String sftpHost = "your-sftp-host";
+		int sftpPort = 22;
+		String sftpUsername = "your-sftp-username";
+		String sftpPassword = "your-sftp-password";
+		String parentFolderPath = "your-parent-folder-path";
+		String compressedFileName = "your-compressed-file.zip";
 
-			opStatList = fileService.getDailyOPStat("push", 0, from_dateTime, to_dateTime, id);
-			System.out.println(from_dateTime + " " + to_dateTime);
-			if (opStatList == null)
-				return null;
-			else
-				return new ResponseEntity<>(opStatList, HttpStatus.OK);
-		} else { // for monthly op file
-
-			from_date = to_date.minusMonths(1);
-			from_dateTime = LocalDateTime.of(from_date, time);
-
-			System.out.println(from_dateTime + " " + to_dateTime);
-			opStatList = fileService.getMonthlyOPStat("push", 0, from_dateTime, to_dateTime, id);
-			return new ResponseEntity<>(opStatList, HttpStatus.OK);
-		}
+		// Call the file download service
+		// fileDownloadService.downloadFileFromSFTP(sftpHost, sftpPort, sftpUsername,
+		// sftpPassword, parentFolderPath, compressedFileName, response);
 	}
 }

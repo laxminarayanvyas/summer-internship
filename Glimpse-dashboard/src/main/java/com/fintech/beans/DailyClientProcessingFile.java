@@ -8,13 +8,11 @@ import javax.persistence.Id;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-
-
 @Entity
-
 public class DailyClientProcessingFile {
 	@Id
 	private int sftpparser_statistics_id;
+	@Column(name="user_name")
 	private String user_name;
 	private Date process_timestamp_local;
 	private String process_status;
@@ -25,7 +23,7 @@ public class DailyClientProcessingFile {
 	private int is_active;
 	@JsonFormat(pattern = "HH:mm:ss")
 	private Date entry_dt_time;
-	@JsonFormat(pattern = "yyyy-MM-dd")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date updated_date;
 	private String filename;
 	private int is_test;
@@ -35,8 +33,11 @@ public class DailyClientProcessingFile {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
-
+	
+	public DailyClientProcessingFile( String user_name) {
+		this.user_name = user_name;
+	}
+	
 	public DailyClientProcessingFile(int sftpparser_statistics_id, String user_name, Date process_timestamp_local,
 			String process_status, String is_notification_sent, String event_type, String status_details, int is_active,
 			Date entry_dt_time, Date updated_date, String filename, int is_test) {
@@ -178,11 +179,7 @@ public class DailyClientProcessingFile {
 
 	@Override
 	public String toString() {
-		return "DailyClientProcessingFile [sftpparser_statistics_id=" + sftpparser_statistics_id + ", user_name="
-				+ user_name + ", process_timestamp_local=" + process_timestamp_local + ", process_status="
-				+ process_status + ", is_notification_sent=" + is_notification_sent + ", event_type=" + event_type
-				+ ", status_details=" + status_details + ", is_active=" + is_active + ", entry_dt_time=" + entry_dt_time
-				+ ", updated_date=" + updated_date + ", filename=" + filename + ", is_test=" + is_test + "]";
+		return "DailyClientProcessingFile [ user_name="+ user_name+"]\n";
 	}
 	
 	

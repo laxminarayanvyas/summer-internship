@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,7 +70,8 @@ public class FileController {
 
 	/* daily client processing file */
 	@GetMapping("/dailyclient")
-	public ResponseEntity<List<DailyClientProcessingFile>> dailyClientFile(@RequestParam(name = "searchDate") String date) {
+	public ResponseEntity<List<DailyClientProcessingFile>> dailyClientFile(
+			@RequestParam(name = "searchDate") String date) {
 //		LocalDate from_date, to_date;
 //		to_date = LocalDate.now();
 //		from_date = to_date.minusDays(1);
@@ -152,17 +155,18 @@ public class FileController {
 
 	@GetMapping("/downloadcons")
 	public void downloadCSV(HttpServletResponse response, @RequestParam(name = "startDate") String startDate,
-			@RequestParam(name = "endDate") String endDate, @RequestParam(name="type") Boolean type) throws IOException {
+			@RequestParam(name = "endDate") String endDate, @RequestParam(name = "type") Boolean type)
+			throws IOException {
 		System.out.println(startDate + " " + endDate);
 		response.setContentType("text/csv");
 		response.setHeader("Content-Disposition", "attachment; filename=\"ConsolidatedData.csv\"");
 
-		//System.out.println(type.getClass().getName());
+		// System.out.println(type.getClass().getName());
 		List<ConsolidatedOPFile> dataList;
-		if(type)
-			dataList = fileService.getConsolidatedOP(startDate, endDate,"CAPPED");
+		if (type)
+			dataList = fileService.getConsolidatedOP(startDate, endDate, "CAPPED");
 		else
-			dataList = fileService.getConsolidatedOP(startDate, endDate,"UNCAPPED");
+			dataList = fileService.getConsolidatedOP(startDate, endDate, "UNCAPPED");
 
 		// Create a Callable to generate the CSV data
 		Callable<Stream<String>> csvDataCallable = () -> ExcelHelper.consolidatedOP(dataList);
@@ -265,7 +269,6 @@ public class FileController {
 		response.setContentType("text/csv");
 		response.setHeader("Content-Disposition", "attachment; filename=\"OPfile.csv\"");
 
-		
 		String pattern = "yyyy-MM-dd";
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
 		LocalDate to_date = LocalDate.parse(date, formatter);
@@ -347,26 +350,25 @@ public class FileController {
 
 		from_date = to_date.minusDays(1);
 		from_dateTime = LocalDateTime.of(from_date, time);
-		
-		System.out.println("opstat: "+from_dateTime+" "+to_dateTime);
+
+		System.out.println("opstat: " + from_dateTime + " " + to_dateTime);
 
 		return new ResponseEntity<>(fileService.getDailyMonthlyOPFilesStat("push", 0, from_dateTime, to_dateTime),
 				HttpStatus.OK);
 	}
 
 	// file download from SFTP
-	@GetMapping("/downloadfile")
-	public void downloadFile(HttpServletResponse response) throws IOException {
-		// Set the SFTP and file details
-		String sftpHost = "your-sftp-host";
-		int sftpPort = 22;
-		String sftpUsername = "your-sftp-username";
-		String sftpPassword = "your-sftp-password";
-		String parentFolderPath = "your-parent-folder-path";
-		String compressedFileName = "your-compressed-file.zip";
-
-		// Call the file download service
-		// fileDownloadService.downloadFileFromSFTP(sftpHost, sftpPort, sftpUsername,
-		// sftpPassword, parentFolderPath, compressedFileName, response);
+	@GetMapping("/{clientName}/{filePath}")
+	public ResponseEntity<byte[]> downloadFile(@PathVariable String clientName, @PathVariable String filePath,
+			@RequestParam(name="updatedDate") String date) {
+		
+		System.out.println(date);
+		//filePath+=;
+		byte[] fileBytes = fileService.downloadFile(clientName, filePath);
+		if (fileBytes != null) {
+			return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(fileBytes);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 }

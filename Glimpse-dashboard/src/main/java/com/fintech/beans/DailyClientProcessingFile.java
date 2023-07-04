@@ -1,5 +1,6 @@
 package com.fintech.beans;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -23,8 +24,9 @@ public class DailyClientProcessingFile {
 	private int is_active;
 	@JsonFormat(pattern = "HH:mm:ss")
 	private Date entry_dt_time;
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	private Date updated_date;
+	//@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonFormat(pattern= "yyyyMMddHHmmss")
+	private LocalDateTime updated_date;
 	private String filename;
 	private int is_test;
 	
@@ -40,7 +42,7 @@ public class DailyClientProcessingFile {
 	
 	public DailyClientProcessingFile(int sftpparser_statistics_id, String user_name, Date process_timestamp_local,
 			String process_status, String is_notification_sent, String event_type, String status_details, int is_active,
-			Date entry_dt_time, Date updated_date, String filename, int is_test) {
+			Date entry_dt_time, LocalDateTime updated_date, String filename, int is_test) {
 		super();
 		this.sftpparser_statistics_id = sftpparser_statistics_id;
 		this.user_name = user_name;
@@ -147,12 +149,12 @@ public class DailyClientProcessingFile {
 	}
 
 
-	public Date getUpdated_date() {
+	public LocalDateTime getUpdated_date() {
 		return updated_date;
 	}
 
 
-	public void setUpdated_date(Date updated_date) {
+	public void setUpdated_date(LocalDateTime updated_date) {
 		this.updated_date = updated_date;
 	}
 
@@ -176,11 +178,17 @@ public class DailyClientProcessingFile {
 		this.is_test = is_test;
 	}
 
-
 	@Override
 	public String toString() {
-		return "DailyClientProcessingFile [ user_name="+ user_name+"]\n";
+		return "DailyClientProcessingFile [sftpparser_statistics_id=" + sftpparser_statistics_id + ", user_name="
+				+ user_name + ", process_timestamp_local=" + process_timestamp_local + ", process_status="
+				+ process_status + ", is_notification_sent=" + is_notification_sent + ", event_type=" + event_type
+				+ ", status_details=" + status_details + ", is_active=" + is_active + ", entry_dt_time=" + entry_dt_time
+				+ ", updated_date=" + updated_date + ", filename=" + filename + ", is_test=" + is_test + "]\n";
 	}
+
+
+	
 	
 	
 	

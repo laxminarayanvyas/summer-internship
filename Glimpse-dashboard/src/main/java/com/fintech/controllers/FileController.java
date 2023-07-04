@@ -360,11 +360,19 @@ public class FileController {
 	// file download from SFTP
 	@GetMapping("/{clientName}/{filePath}")
 	public ResponseEntity<byte[]> downloadFile(@PathVariable String clientName, @PathVariable String filePath,
-			@RequestParam(name="updatedDate") String date) {
-		
-		System.out.println(date);
-		//filePath+=;
-		byte[] fileBytes = fileService.downloadFile(clientName, filePath);
+			@RequestParam(name = "updatedDate") String date) {
+
+		/*
+		 * // Get the file extension from the first string String fileExtension =
+		 * firstString.substring(firstString.lastIndexOf('.') + 1); // Remove the file
+		 * extension from the first string String fileNameWithoutExtension =
+		 * firstString.substring(0, firstString.lastIndexOf('.')); // Concatenate the
+		 * strings with an underscore String finalString = fileNameWithoutExtension +
+		 * "_" + secondString + "." + fileExtension;
+		 */
+		String finalString = filePath.replaceFirst("\\.([^.]*)$", "_" + date + ".$1");
+		System.out.println(finalString);
+		byte[] fileBytes = fileService.downloadFile(clientName, finalString);
 		if (fileBytes != null) {
 			return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(fileBytes);
 		} else {

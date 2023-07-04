@@ -98,36 +98,67 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
-	public List<DailyClientProcessingFile> getDailyClientFile(String event, int status, LocalDateTime from_dateTime,
-			LocalDateTime to_dateTime) {
-		
-		List<DailyClientProcessingFile> mergedList = new ArrayList<>();
-		List<DailyClientProcessingFile> dataUsers;
-		Set<Users> allUsers;
-		Comparator<DailyClientProcessingFile> comparator = Comparator.comparing(DailyClientProcessingFile::getUpdated_date, Comparator.nullsLast(Comparator.naturalOrder()));
-		
-		allUsers=userDao.getAllUsers();
-		dataUsers=fileDao.fetchDailyClientFile(event, status, from_dateTime, to_dateTime);
-		List<DailyClientProcessingFile> userList = new ArrayList<>();
-		for (Users user : allUsers) {
-			String username = user.getUserName();
+	/*
+	 * public List<DailyClientProcessingFile> getDailyClientFile(String event, int
+	 * status, LocalDateTime from_dateTime, LocalDateTime to_dateTime) {
+	 * 
+	 * List<DailyClientProcessingFile> mergedList = new ArrayList<>();
+	 * List<DailyClientProcessingFile> dataUsers; Set<Users> allUsers;
+	 * Comparator<DailyClientProcessingFile> comparator =
+	 * Comparator.comparing(DailyClientProcessingFile::getUpdated_date,
+	 * Comparator.nullsLast(Comparator.naturalOrder()));
+	 * 
+	 * allUsers=userDao.getAllUsers(); dataUsers=fileDao.fetchDailyClientFile(event,
+	 * status, from_dateTime, to_dateTime); List<DailyClientProcessingFile> userList
+	 * = new ArrayList<>(); for (Users user : allUsers) { String username =
+	 * user.getUserName();
+	 * 
+	 * // Check if the username exists in the dataUsers list boolean usernameExists
+	 * = dataUsers.stream().anyMatch(dataUser ->
+	 * dataUser.getUser_name().equals(username)); if (!usernameExists) { // Create a
+	 * new DailyClientProcessingFile object and set the username
+	 * DailyClientProcessingFile dailyClientProcessingFile = new
+	 * DailyClientProcessingFile();
+	 * dailyClientProcessingFile.setUser_name(username);
+	 * userList.add(dailyClientProcessingFile); } }
+	 * 
+	 * // Add the elements from the list to the merged list
+	 * mergedList.addAll(userList); mergedList.addAll(dataUsers);
+	 * mergedList.sort(comparator); return mergedList; }
+	 */
+	public List<DailyClientProcessingFile> getDailyClientFile(String event, int status, LocalDateTime from_dateTime, LocalDateTime to_dateTime) {
+	    List<DailyClientProcessingFile> mergedList = new ArrayList<>();
+	    List<DailyClientProcessingFile> dataUsers;
+	    Set<String> existingUsernames = new HashSet<>();
+	    Comparator<DailyClientProcessingFile> comparator = Comparator.comparing(DailyClientProcessingFile::getUpdated_date, Comparator.nullsLast(Comparator.naturalOrder()));
 
-		    // Check if the username exists in the dataUsers list
-		    boolean usernameExists = dataUsers.stream().anyMatch(dataUser -> dataUser.getUser_name().equals(username));
-		    if (!usernameExists) {
-		        // Create a new DailyClientProcessingFile object and set the username
-		        DailyClientProcessingFile dailyClientProcessingFile = new DailyClientProcessingFile();
-		        dailyClientProcessingFile.setUser_name(username);
-		        userList.add(dailyClientProcessingFile);
-		    }
-		}
+	    Set<Users> allUsers = userDao.getAllUsers();
+	    dataUsers = fileDao.fetchDailyClientFile(event, status, from_dateTime, to_dateTime);
 
-		// Add the elements from the list to the merged list
-		mergedList.addAll(userList);
-		mergedList.addAll(dataUsers);
-		mergedList.sort(comparator);
-		return mergedList;
+	    // Add the existing usernames to the set
+	    for (DailyClientProcessingFile dataUser : dataUsers) {
+	        existingUsernames.add(dataUser.getUser_name());
+	    }
+
+	    // Add the dataUsers to the mergedList
+	    mergedList.addAll(dataUsers);
+
+	    // Check for missing usernames and add them to the mergedList
+	    for (Users user : allUsers) {
+	        String username = user.getUserName();
+	        if (!existingUsernames.contains(username)) {
+	            DailyClientProcessingFile dailyClientProcessingFile = new DailyClientProcessingFile();
+	            dailyClientProcessingFile.setUser_name(username);
+	            mergedList.add(dailyClientProcessingFile);
+	        }
+	    }
+
+	    // Sort the mergedList
+	    mergedList.sort(comparator);
+	    return mergedList;
 	}
+
+
 
 	@Override
 	public List<DailyClientProcessingFile> getDailyMonthlyOPFilesStat(String event_type, int test,

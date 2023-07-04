@@ -357,8 +357,40 @@ public class FileController {
 				HttpStatus.OK);
 	}
 
-	// file download from SFTP
-	@GetMapping("/{clientName}/{filePath}")
+	 private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+	    // file download from SFTP
+	    @GetMapping("/{clientName}/{filePath}")
+	    public ResponseEntity<byte[]> downloadFile1(@PathVariable String clientName, @PathVariable String filePath,
+	                                               @RequestParam(name = "updatedDate") String date) {
+
+	        String finalString = filePath.replaceFirst("\\.([^.]*)$", "_" + date + ".$1");
+	        System.out.println(finalString);
+
+	        // Create a task to download the file asynchronously
+	        Callable<byte[]> downloadTask = () -> fileService.downloadFile(clientName, finalString);
+
+	        try {
+	            // Submit the download task to the executor service
+	            Future<byte[]> future = executorService.submit(downloadTask);
+
+	            // Wait for the download to complete
+	            byte[] fileBytes = future.get();
+
+	            if (fileBytes != null) {
+	                return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(fileBytes);
+	            } else {
+	                return ResponseEntity.notFound().build();
+	            }
+	        } catch (InterruptedException e) {
+	            Thread.currentThread().interrupt();
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	        } catch (ExecutionException e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	        }
+	    }
+
+	@GetMapping("/{clientName}/{filePath}/sdsdsd")
 	public ResponseEntity<byte[]> downloadFile(@PathVariable String clientName, @PathVariable String filePath,
 			@RequestParam(name = "updatedDate") String date) {
 

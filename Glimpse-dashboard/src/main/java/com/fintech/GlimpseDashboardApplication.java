@@ -8,7 +8,7 @@ public class GlimpseDashboardApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(GlimpseDashboardApplication.class, args);
-		System.out.println("welcome to boot project"); 
+		System.out.println("welcome to boot project bro"); 
 	}
 
 }

@@ -52,7 +52,7 @@ import com.fintech.beans.OutputFile;
 import com.fintech.services.ExcelHelper;
 import com.fintech.services.FileService;
 
-@RestController
+@RestController 
 @CrossOrigin(origins = { "http://192.168.137.1:8081", "http://192.168.0.141:8081", "http://192.168.137.1:10001","http://localhost:4200" })
 public class FileController {
 

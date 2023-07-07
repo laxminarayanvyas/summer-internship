@@ -169,77 +169,60 @@ public class FileServiceImpl implements FileService {
 	}
 
 	
-	
+	private Session createSFTPSession() throws JSchException {
+	    JSch jsch = new JSch();
+
+	    if (PRIVATE_KEY_PATH != null && !PRIVATE_KEY_PATH.isEmpty()) {
+	        try {
+	            jsch.addIdentity(PRIVATE_KEY_PATH);
+	        } catch (JSchException e) {
+	            logger.error("Failed to load private key: {}", e.getMessage());
+	            throw e;
+	        }
+	    }
+
+	    Session session = jsch.getSession(SFTP_USERNAME, SFTP_HOST, SFTP_PORT);
+	    session.setConfig("StrictHostKeyChecking", "no");
+	    session.connect();
+
+	    if (!session.isConnected()) {
+	        logger.error("Failed to establish SFTP session.");
+	        throw new JSchException("Failed to establish SFTP session.");
+	    }
+
+	    return session;
+	}
+
 	public byte[] downloadFile(String clientName, String filePath) {
-        try {
-            JSch jsch = new JSch();
+	    try {
+	        Session session = createSFTPSession();
 
-            if (PRIVATE_KEY_PATH != null && !PRIVATE_KEY_PATH.isEmpty()) {
-                try {
-                    jsch.addIdentity(PRIVATE_KEY_PATH);
-                } catch (JSchException e) {
-                    System.out.println("Failed to load private key: " + e.getMessage());
-                }
-            }
+	        ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
+	        channelSftp.connect();
 
-            Session session = jsch.getSession(SFTP_USERNAME, SFTP_HOST, SFTP_PORT);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+	        if (!channelSftp.isConnected()) {
+	            logger.error("Failed to establish SFTP channel.");
+	            channelSftp.disconnect();
+	            session.disconnect();
+	            return null;
+	        }
 
-            if (!session.isConnected()) {
-                logger.error("Failed to establish SFTP session.");
-                return null;
-            }
+	        // Build the full file path with the dynamic client name
+	        String fullFilePath = "/home/ubuntu/compressed_uploads/" + clientName + "/" + filePath;
 
-            ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
-            channelSftp.connect();
+	        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	        channelSftp.get(fullFilePath, outputStream);
 
-            if (!channelSftp.isConnected()) {
-                logger.error("Failed to establish SFTP channel.");
-                session.disconnect();
-                return null;
-            }
+	        channelSftp.disconnect();
+	        session.disconnect();
 
-            // Build the full file path with the dynamic client name
-            String fullFilePath = "/home/ubuntu/compressed_uploads/" + clientName + "/" + filePath;
+	        return outputStream.toByteArray();
+	    } catch (JSchException | SftpException e) {
+	        logger.error("SFTP operation failed: {}", e.getMessage());
+	    }
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            channelSftp.get(fullFilePath, outputStream);
-
-            channelSftp.disconnect();
-            session.disconnect();
-
-            return outputStream.toByteArray();
-        } catch (JSchException | SftpException e) {
-            logger.error("SFTP operation failed: {}", e.getMessage());
-        }
-
-        return null;
-    }
-	/*
-	 * public byte[] downloadFile(String clientName, String filePath) { try { JSch
-	 * jsch = new JSch();
-	 * 
-	 * if (PRIVATE_KEY_PATH != null && !PRIVATE_KEY_PATH.isEmpty()) {
-	 * jsch.addIdentity(PRIVATE_KEY_PATH); }
-	 * 
-	 * Session session = jsch.getSession(SFTP_USERNAME, SFTP_HOST, SFTP_PORT);
-	 * session.setConfig("StrictHostKeyChecking", "no"); session.connect();
-	 * 
-	 * ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
-	 * channelSftp.connect();
-	 * 
-	 * // Build the full file path with the dynamic client name String fullFilePath
-	 * = "/home/ubuntu/compressed_uploads/" + clientName + "/" + filePath;
-	 * 
-	 * ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	 * channelSftp.get(fullFilePath, outputStream);
-	 * 
-	 * channelSftp.disconnect(); session.disconnect();
-	 * 
-	 * return outputStream.toByteArray(); } catch (JSchException | SftpException e)
-	 * { // Handle exceptions }
-	 * 
-	 * return null; }
-	 */
+	    return null;
+	}
+	
+	
 }

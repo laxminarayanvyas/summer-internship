@@ -12,7 +12,7 @@ public class SftpCommandScheduler {
         this.commandExecutor = commandExecutor;
     }
 
-    @Scheduled(fixedRate = 8000) // Executes every 5 seconds
+    @Scheduled(fixedRate = 7000) // Executes every 5 seconds
     public void executeSftpCommand() {
         commandExecutor.executeSftpCommand();
     }

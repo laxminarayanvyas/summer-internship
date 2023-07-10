@@ -1,55 +1,59 @@
 package com.fintech;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
+import com.jcraft.jsch.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.io.InputStream;
 
 @Component
 public class SftpCommandExecutor {
 
-	/*
-	 * @Value("${sftp.host}") private String host;
-	 * 
-	 * @Value("${sftp.port}") private int port;
-	 * 
-	 * @Value("${sftp.username}") private String username;
-	 * 
-	 * @Value("${sftp.password}") private String password;
-	 */
-	private static final String SFTP_HOST = "35.178.89.183";
-	private static final int SFTP_PORT = 22;
-	private static final String SFTP_USERNAME = "ubuntu";
-	private static final String PRIVATE_KEY_PATH = "D:\\ADMIN\\git\\summer-internship\\Glimpse-dashboard\\src\\main\\java\\com\\fintech\\thekey";
+    @Value("${sftp.host}")
+    private String sftpHost;
+
+    @Value("${sftp.port}")
+    private int sftpPort;
+
+    @Value("${sftp.username}")
+    private String sftpUsername;
+
+    @Value("${sftp.private-key-path}")
+    private String privateKeyPath;
+
+    private JSch jsch;
+    private Session session;
 
     @PostConstruct
+    public void initialize() throws JSchException {
+        jsch = new JSch();
+        jsch.addIdentity(privateKeyPath);
+        session = jsch.getSession(sftpUsername, sftpHost, sftpPort);
+        session.setConfig("StrictHostKeyChecking", "no");
+        session.connect();
+    }
+
     public void executeSftpCommand() {
-    	JSch jSch = new JSch();
-    	 try {
-    		 jSch.addIdentity(PRIVATE_KEY_PATH);
-             Session session = jSch.getSession(SFTP_USERNAME, SFTP_HOST, SFTP_PORT);
-             session.setConfig("StrictHostKeyChecking", "no");
-             session.connect();
+        ChannelExec channel = null;
+        try {
+            channel = (ChannelExec) session.openChannel("exec");
+            channel.setCommand("sudo chmod -R 700 /home/ubuntu/compressed_uploads/*");
+            channel.setInputStream(null);
+            channel.setErrStream(System.err);
+            channel.connect();
+            System.out.println("SFTP command executed successfully.");
+        } catch (JSchException e) {
+            System.err.println("Failed to execute SFTP command: " + e.getMessage());
+        } finally {
+            if (channel != null) {
+                channel.disconnect();
+            }
+        }
+    }
 
-             Channel channel = session.openChannel("exec");
-             ((ChannelExec) channel).setCommand("sudo chmod -R 700 /home/ubuntu/compressed_uploads/*");
-             channel.setInputStream(null);
-             ((ChannelExec) channel).setErrStream(System.err);
-
-             channel.connect();
-
-             channel.disconnect();
-             session.disconnect();
-
-             System.out.println("SFTP command executed successfully.");
-         } catch (JSchException e) {
-             System.err.println("Failed to execute SFTP command: " + e.getMessage());
-         }
+    public void closeSession() {
+        if (session != null && session.isConnected()) {
+            session.disconnect();
+        }
     }
 }

@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
@@ -43,10 +44,21 @@ import com.jcraft.jsch.SftpException;
 public class FileServiceImpl implements FileService {
 
 	private static final Logger logger = LoggerFactory.getLogger(FileService.class);
-	private static final String SFTP_HOST = "35.178.89.183";
-	private static final int SFTP_PORT = 22;
-	private static final String SFTP_USERNAME = "ubuntu";
-	private static final String PRIVATE_KEY_PATH = "D:\\ADMIN\\git\\summer-internship\\Glimpse-dashboard\\src\\main\\java\\com\\fintech\\thekey";
+	//private static final String SFTP_HOST = "35.178.89.183";
+	//private static final int SFTP_PORT = 22;
+	//private static final String SFTP_USERNAME = "ubuntu";
+	//private static final String PRIVATE_KEY_PATH = "D:\\ADMIN\\git\\summer-internship\\Glimpse-dashboard\\src\\main\\java\\com\\fintech\\thekey";
+	@Value("${sftp.host}")
+    private String SFTP_HOST;
+
+    @Value("${sftp.port}")
+    private int SFTP_PORT;
+
+    @Value("${sftp.username}")
+    private String SFTP_USERNAME;
+
+    @Value("${sftp.private-key-path}")
+    private String PRIVATE_KEY_PATH;
 
 	@Autowired
 	private UserDao userDao;
